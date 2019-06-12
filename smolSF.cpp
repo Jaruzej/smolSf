@@ -22,6 +22,10 @@ int main()
 		t[4 * i + 1] = 150;
 
 	int frames = 60;
+	
+	smolSf::add_on_key_down(sf::Keyboard::W, [&]() { frames += 2 * (rand() % 2) - 1; });
+	smolSf::add_on_key_up(sf::Keyboard::W, [&]() { frames += 2 * (rand() % 2) - 1; });
+
 	while (smolSf::all_isOpen()) {
 	
 		smolSf::smol_helper help;
@@ -31,7 +35,7 @@ int main()
 			if (event.type == sf::Event::Closed)
 				smolSf::all_close();
 		}
-		w2.on_key_down(sf::Keyboard::W, [&]() {frames += 2 * (rand() % 2) - 1; });
+		
 
 		w2 << "Framerate: " << frames << smolSf::endl;
 		w2 << "Rays: " << frames * 156 << smolSf::endl;

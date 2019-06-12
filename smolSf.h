@@ -6,6 +6,7 @@
 #include<algorithm>
 #include<array>
 #include<sstream>
+#include<functional>
 
 namespace smolSf {
 
@@ -28,26 +29,36 @@ namespace smolSf {
 	bool any_key_down();
 
 	//Mouse state
-	static std::array<bool, sf::Mouse::ButtonCount> isMouseButtonPressed = { false };
-	static std::array<bool, sf::Mouse::ButtonCount> isMouseButtonDown	 = { false };
-	static std::array<bool, sf::Mouse::ButtonCount> isMouseButtonUp		 = { false };
+	std::array<bool, sf::Mouse::ButtonCount> isMouseButtonPressed	= { false };
+	std::array<bool, sf::Mouse::ButtonCount> isMouseButtonDown		= { false };
+	std::array<bool, sf::Mouse::ButtonCount> isMouseButtonUp		= { false };
 	
-	static sf::Vector2i mouse_position;
-	static sf::Vector2i mouse_delta;
+	sf::Vector2i mouse_position;
+	sf::Vector2i mouse_delta;
 	
-	static void set_mouse_position(sf::Vector2i&);
+	void set_mouse_position(sf::Vector2i&);
 
 	constexpr auto endl = "\n";
 
 	namespace {
-		static bool isKeyPressedLast[sf::Keyboard::KeyCount] = { false };
-		static sf::Vector2i last_mouse_position;
+		bool isKeyPressedLast[sf::Keyboard::KeyCount] = { false };
+		sf::Vector2i last_mouse_position;
+		std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> on_key_down_functions;
+		std::vector<std::pair<sf::Mouse::Button, std::function<void()>>> on_button_down_functions;
+
+		std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> on_key_up_functions;
+		std::vector<std::pair<sf::Mouse::Button, std::function<void()>>> on_button_up_functions;
 	}
 
-
 	void poll_keyboard();
-	void poll_mouse();
+	void poll_mouse();	
 
+
+	void add_on_key_down(sf::Keyboard::Key, std::function<void() > );
+	void add_on_button_down(sf::Mouse::Button, std::function<void() >);
+
+	void add_on_key_up(sf::Keyboard::Key, std::function<void() >);
+	void add_on_button_up(sf::Mouse::Button, std::function<void() >);
 
 	class smol_window {
 		static inline std::vector<smol_window*> all_windows;
@@ -81,9 +92,6 @@ namespace smolSf {
 		void close();
 		void display();
 		bool pollEvent(sf::Event&);
-
-		
-
 
 		friend bool all_isOpen();
 		friend bool any_isOpen();
@@ -268,6 +276,14 @@ void smolSf::poll_keyboard() {
 		smolSf::isKeyUp		[key] = !smolSf::isKeyPressed[key] &&  smolSf::isKeyPressedLast[key];
 		smolSf::isKeyPressedLast[key] = smolSf::isKeyPressed[key];
 	}
+	for (auto [key, f] : smolSf::on_key_down_functions) {
+		if (smolSf::isKeyDown[key])
+			f();
+	}
+	for (auto [key, f] : smolSf::on_key_up_functions) {
+		if (smolSf::isKeyUp[key])
+			f();
+	}
 }
 
 void smolSf::poll_mouse() {
@@ -281,6 +297,14 @@ void smolSf::poll_mouse() {
 		smolSf::isKeyDown	[button] =  smolSf::isKeyPressed[button] && !smolSf::isKeyPressedLast[button];
 		smolSf::isKeyUp		[button] = !smolSf::isKeyPressed[button] &&  smolSf::isKeyPressedLast[button];
 		smolSf::isKeyPressedLast[button] = smolSf::isKeyPressed[button];
+	}
+	for (auto [button, f] : smolSf::on_button_down_functions) {
+		if (smolSf::isMouseButtonDown[button])
+			f();
+	}
+	for (auto [button, f] : smolSf::on_button_down_functions) {
+		if (smolSf::isMouseButtonUp[button])
+			f();
 	}
 }
 
@@ -340,4 +364,21 @@ smolSf::smol_window& smolSf::operator<<(smolSf::smol_window& win,  const T& s) {
 		win.current_text_pos.x = 0;
 
 	return win;
+}
+
+
+void smolSf::add_on_key_down(sf::Keyboard::Key key, std::function<void()> f ) {
+	smolSf::on_key_down_functions.push_back({ key,f });
+}
+
+
+void smolSf::add_on_button_down(sf::Mouse::Button button, std::function<void()> f) {
+	smolSf::on_button_down_functions.push_back({ button,f });
+}
+
+void smolSf::add_on_key_up(sf::Keyboard::Key key, std::function<void() > f) {
+	smolSf::on_key_up_functions.push_back({ key,f });
+}
+void smolSf::add_on_button_up(sf::Mouse::Button button, std::function<void() > f) {
+	smolSf::on_button_up_functions.push_back({ button,f });
 }
