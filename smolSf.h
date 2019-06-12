@@ -5,21 +5,23 @@
 #include<iostream>
 #include<algorithm>
 #include<array>
-
+#include<sstream>
 
 namespace smolSf {
 
+	static size_t character_size = 24;
+	constexpr auto string_for_one_line_size = "fox";
 
-	static const size_t title_size = 38;
-	static const size_t taskbar_size = 50;
+	constexpr size_t title_size = 38;
+	constexpr size_t taskbar_size = 50;
 
-	static size_t desktop_width = sf::VideoMode::getDesktopMode().width;
-	static size_t desktop_height = sf::VideoMode::getDesktopMode().height;
+	const size_t desktop_width = sf::VideoMode::getDesktopMode().width;
+	const size_t desktop_height = sf::VideoMode::getDesktopMode().height;
 
 	//Keyboard state
-	static std::array<bool, sf::Keyboard::KeyCount> isKeyPressed	= { false };
-	static std::array<bool, sf::Keyboard::KeyCount> isKeyDown		= { false };
-	static std::array<bool, sf::Keyboard::KeyCount> isKeyUp			= { false };
+	std::array<bool, sf::Keyboard::KeyCount> isKeyPressed	= { false };
+	std::array<bool, sf::Keyboard::KeyCount> isKeyDown		= { false };
+	std::array<bool, sf::Keyboard::KeyCount> isKeyUp		= { false };
 	
 	bool any_key_pressed();
 	bool any_key_down();
@@ -34,6 +36,8 @@ namespace smolSf {
 	
 	static void set_mouse_position(sf::Vector2i&);
 
+	static std::string endl = "\n";
+
 	namespace {
 		static bool isKeyPressedLast[sf::Keyboard::KeyCount] = { false };
 		static sf::Vector2i last_mouse_position;
@@ -46,6 +50,8 @@ namespace smolSf {
 
 	class smol_window {
 		static inline std::vector<smol_window*> all_windows;
+		sf::Vector2f current_text_pos;
+
 	public:
 		static inline size_t count = 0;
 		sf::RenderWindow window;
@@ -80,7 +86,9 @@ namespace smolSf {
 		friend bool any_isOpen();
 		friend void all_display();
 		friend bool all_pollEvent(sf::Event&);
-		friend smol_window& operator<<(smol_window&, const std::string);
+
+		template<typename T>
+		friend smol_window& operator<<(smol_window&, const T&);
 
 		sf::Vector2u size();
 	};
@@ -157,6 +165,7 @@ void smolSf::smol_window::display() {
 	window.display();
 }
 void smolSf::smol_window::clear() {
+	current_text_pos = {};
 	window.clear();
 }
 bool smolSf::smol_window::isOpen() {
@@ -173,7 +182,7 @@ sf::Vector2u smolSf::smol_window::size() {
 }
 
 smolSf::smol_window::~smol_window() { 
-	std::remove(all_windows.begin(), all_windows.end(), this);
+	all_windows.erase(std::remove(all_windows.begin(), all_windows.end(), this),all_windows.end());
 	std::cout << "des"; count--; 
 }
 
@@ -258,7 +267,42 @@ bool smolSf::any_key_down() {
 	return false;
 }
 
-smolSf::smol_window& smolSf::operator<<(smolSf::smol_window& win,  const std::string s) {
-	sf::Text t(s,win.font);
+template<typename T>
+std::string convert_T_to_str(const T& s) {
+	std::stringstream ss;
+	ss << s;
+	return ss.str();
+}
+
+size_t count_newlines(std::string s) {
+	size_t newline_count = 0;
+
+	for (auto c : s)
+		if (c == '\n')
+			newline_count++;
+
+	return newline_count;
+}
+
+
+template<typename T>
+smolSf::smol_window& smolSf::operator<<(smolSf::smol_window& win,  const T& s) {
+
+	std::string converted = convert_T_to_str(s);
+
+	size_t newline_count = count_newlines(converted);
+
+	sf::Text t(converted,win.font, character_size);
+	t.setPosition(win.current_text_pos);
+	
 	win.window.draw(t);
+
+	sf::Text t2(random_string_for_size,win.font,character_size)
+	
+	win.current_text_pos += sf::Vector2f(t.getGlobalBounds().width, t2.getGlobalBounds().height*newline_count);
+
+	if (newline_count > 0)
+		win.current_text_pos.x = 0;
+
+	return win;
 }
