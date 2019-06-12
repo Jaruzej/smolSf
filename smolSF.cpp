@@ -16,18 +16,13 @@ int main()
 	smolSf::character_size = 30;
 	w2.font.loadFromFile("default.ttf");
 
-	sf::Uint8* t = new sf::Uint8[4 * w2.size().x*w2.size().y];
-	std::fill_n(t, 4 * w2.size().x*w2.size().y, 255);
-	for (size_t i = 0; i < w2.size().x*w2.size().y; i++)
-		t[4 * i + 1] = 150;
-
 	int frames = 60;
 	
 	smolSf::add_on_key_down(sf::Keyboard::W, [&]() { frames += 2 * (rand() % 2) - 1; });
 	smolSf::add_on_key_up(sf::Keyboard::W, [&]() { frames += 2 * (rand() % 2) - 1; });
 
 	while (smolSf::all_isOpen()) {
-	
+		smolSf::any_isOpen();
 		smolSf::smol_helper help;
 
 		sf::Event event;

@@ -25,8 +25,8 @@ namespace smolSf {
 	std::array<bool, sf::Keyboard::KeyCount> isKeyDown		= { false };
 	std::array<bool, sf::Keyboard::KeyCount> isKeyUp		= { false };
 	
-	bool any_key_pressed();
-	bool any_key_down();
+	[[nodiscard]] bool any_key_pressed();
+	[[nodiscard]] bool any_key_down();
 
 	//Mouse state
 	std::array<bool, sf::Mouse::ButtonCount> isMouseButtonPressed	= { false };
@@ -87,7 +87,7 @@ namespace smolSf {
 		void show(sf::Uint8* pixel_data);
 		void show(sf::Uint8* pixel_data, size_t x, size_t y, size_t x_pos, size_t y_pos);
 
-		bool isOpen();
+		[[nodiscard]] bool isOpen();
 		void clear();
 		void close();
 		void display();
@@ -116,8 +116,8 @@ namespace smolSf {
 
 
 	template<typename T>
-	std::string convert_T_to_str(const T& s);
-	size_t count_newlines(std::string s);
+	[[nodiscard]] std::string convert_T_to_str(const T& s);
+	[[nodiscard]] size_t count_newlines(std::string s);
 
 }
 
@@ -138,7 +138,7 @@ void smolSf::smol_window::draw(T* pixel_data, size_t x, size_t y, size_t x_pos, 
 }
 
 template<typename T>
-T get(const std::initializer_list<T>& l, const size_t n) {
+[[nodiscard]] T get(const std::initializer_list<T>& l, const size_t n) {
 	return *(l.begin() + n);
 }
 
@@ -195,7 +195,7 @@ void smolSf::smol_window::clear() {
 	current_text_pos = {};
 	window.clear();
 }
-bool smolSf::smol_window::isOpen() {
+[[nodiscard]] bool smolSf::smol_window::isOpen() {
 	return window.isOpen();
 }
 void smolSf::smol_window::close() {
@@ -205,7 +205,7 @@ void smolSf::smol_window::close() {
 bool smolSf::smol_window::pollEvent(sf::Event& e) {
 	return window.pollEvent(e);
 }
-sf::Vector2u smolSf::smol_window::size() {
+[[nodiscard]] sf::Vector2u smolSf::smol_window::size() {
 	return window.getSize();
 }
 
@@ -224,7 +224,7 @@ void smolSf::all_display() {
 		win->display();
 }
 
-bool smolSf::any_isOpen() {
+[[nodiscard]] bool smolSf::any_isOpen() {
 	bool temp = false;
 	for (auto win : smolSf::smol_window::all_windows)
 		temp = temp || win->isOpen();
@@ -232,7 +232,7 @@ bool smolSf::any_isOpen() {
 }
 
 
-bool smolSf::all_isOpen() {
+[[nodiscard]] bool smolSf::all_isOpen() {
 	bool temp = true;
 	for (auto win : smolSf::smol_window::all_windows)
 		temp = temp && win->isOpen();
