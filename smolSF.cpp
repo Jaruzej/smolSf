@@ -23,7 +23,7 @@ int main()
 
 	int frames = 60;
 	while (smolSf::all_isOpen()) {
-		//smolSf::all_display();
+	
 		sf::Event event;
 		while (smolSf::all_pollEvent(event)) {
 			if (event.type == sf::Event::Closed)

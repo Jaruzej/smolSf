@@ -11,6 +11,7 @@ namespace smolSf {
 
 	static size_t character_size = 24;
 	constexpr auto string_for_one_line_size = "fox";
+	constexpr size_t padding_between_lines = 10;
 
 	constexpr size_t title_size = 38;
 	constexpr size_t taskbar_size = 50;
@@ -36,7 +37,7 @@ namespace smolSf {
 	
 	static void set_mouse_position(sf::Vector2i&);
 
-	static std::string endl = "\n";
+	constexpr auto endl = "\n";
 
 	namespace {
 		static bool isKeyPressedLast[sf::Keyboard::KeyCount] = { false };
@@ -92,8 +93,12 @@ namespace smolSf {
 
 		sf::Vector2u size();
 	};
+	template<typename T>
+	std::string convert_T_to_str(const T& s);
+	size_t count_newlines(std::string s);
 
 }
+
 
 template<class T>
 void smolSf::smol_window::draw(T* pixel_data) {
@@ -183,7 +188,7 @@ sf::Vector2u smolSf::smol_window::size() {
 
 smolSf::smol_window::~smol_window() { 
 	all_windows.erase(std::remove(all_windows.begin(), all_windows.end(), this),all_windows.end());
-	std::cout << "des"; count--; 
+	count--; 
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -268,13 +273,13 @@ bool smolSf::any_key_down() {
 }
 
 template<typename T>
-std::string convert_T_to_str(const T& s) {
+std::string smolSf::convert_T_to_str(const T& s) {
 	std::stringstream ss;
 	ss << s;
 	return ss.str();
 }
 
-size_t count_newlines(std::string s) {
+size_t smolSf::count_newlines(std::string s) {
 	size_t newline_count = 0;
 
 	for (auto c : s)
@@ -283,7 +288,6 @@ size_t count_newlines(std::string s) {
 
 	return newline_count;
 }
-
 
 template<typename T>
 smolSf::smol_window& smolSf::operator<<(smolSf::smol_window& win,  const T& s) {
@@ -297,11 +301,11 @@ smolSf::smol_window& smolSf::operator<<(smolSf::smol_window& win,  const T& s) {
 	
 	win.window.draw(t);
 
-	sf::Text t2(random_string_for_size,win.font,character_size)
+	sf::Text t2(smolSf::string_for_one_line_size, win.font, character_size);
 	
-	win.current_text_pos += sf::Vector2f(t.getGlobalBounds().width, t2.getGlobalBounds().height*newline_count);
+	win.current_text_pos += sf::Vector2f(t.getGlobalBounds().width, (t2.getGlobalBounds().height+smolSf::padding_between_lines)*newline_count);
 
-	if (newline_count > 0)
+	if (newline_count > 0 && *(--converted.end()) == '\n')
 		win.current_text_pos.x = 0;
 
 	return win;
