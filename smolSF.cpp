@@ -24,18 +24,18 @@ int main()
 	int frames = 60;
 	while (smolSf::all_isOpen()) {
 	
+		smolSf::smol_helper help;
+
 		sf::Event event;
 		while (smolSf::all_pollEvent(event)) {
 			if (event.type == sf::Event::Closed)
 				smolSf::all_close();
 		}
-		w2.clear();
-		smolSf::poll_keyboard();
-		if(smolSf::isKeyDown[sf::Keyboard::W] || smolSf::isKeyUp[sf::Keyboard::W])
-			frames += 2*(rand() % 2) - 1;
+		w2.on_key_down(sf::Keyboard::W, [&]() {frames += 2 * (rand() % 2) - 1; });
+
 		w2 << "Framerate: " << frames << smolSf::endl;
-		w2 << "Rays: " << rand() * 156 << smolSf::endl;
-		w2.display();
+		w2 << "Rays: " << frames * 156 << smolSf::endl;
+		
 	}
 	std::cout << "Hello World!\n";
 	std::cout << smolSf::smol_window::count;

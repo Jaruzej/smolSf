@@ -82,10 +82,15 @@ namespace smolSf {
 		void display();
 		bool pollEvent(sf::Event&);
 
+		
+
+
 		friend bool all_isOpen();
-		friend void all_close();
 		friend bool any_isOpen();
 		friend void all_display();
+		friend void all_close();
+		friend void all_clear();
+
 		friend bool all_pollEvent(sf::Event&);
 
 		template<typename T>
@@ -93,6 +98,15 @@ namespace smolSf {
 
 		sf::Vector2u size();
 	};
+
+
+	class smol_helper{
+	public:
+		smol_helper();
+		~smol_helper();
+	};
+
+
 	template<typename T>
 	std::string convert_T_to_str(const T& s);
 	size_t count_newlines(std::string s);
@@ -179,6 +193,7 @@ bool smolSf::smol_window::isOpen() {
 void smolSf::smol_window::close() {
 	window.close();
 }
+
 bool smolSf::smol_window::pollEvent(sf::Event& e) {
 	return window.pollEvent(e);
 }
@@ -190,6 +205,7 @@ smolSf::smol_window::~smol_window() {
 	all_windows.erase(std::remove(all_windows.begin(), all_windows.end(), this),all_windows.end());
 	count--; 
 }
+
 
 ///////////////////////////////////////////////////////////////////
 //All all_ functions are equivelent to calling given function on all constructed smolsf windows.
@@ -229,6 +245,21 @@ void smolSf::all_close() {
 	}
 }
 
+void smolSf::all_clear() {
+	for (auto win : smolSf::smol_window::all_windows) {
+		win->clear();
+	}
+}
+
+////////////////////////////////////////////////////////
+smolSf::smol_helper::smol_helper() {
+	smolSf::all_clear();
+	smolSf::poll_keyboard();
+	smolSf::poll_mouse();
+}
+smolSf::smol_helper::~smol_helper() {
+	smolSf::all_display();
+}
 
 void smolSf::poll_keyboard() {
 	for (size_t key = sf::Keyboard::A; key < sf::Keyboard::KeyCount; ++key) {
