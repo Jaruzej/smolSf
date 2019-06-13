@@ -22,7 +22,6 @@ int main()
 	smolSf::add_on_key_up(sf::Keyboard::W, [&]() { frames += 2 * (rand() % 2) - 1; });
 
 	while (smolSf::all_isOpen()) {
-		smolSf::any_isOpen();
 		smolSf::smol_helper help;
 
 		sf::Event event;
