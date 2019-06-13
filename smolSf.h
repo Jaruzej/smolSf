@@ -10,12 +10,14 @@
 
 namespace smolSf {
 
-	static size_t character_size = 24;
-	constexpr auto string_for_one_line_size = "fox";
-	constexpr size_t padding_between_lines = 10;
+	constexpr auto default_window_title = "smol window";
 
-	constexpr size_t title_size = 38;
-	constexpr size_t taskbar_size = 50;
+	constexpr auto string_for_one_line_size = "fox";
+	size_t character_size = 24;
+	size_t padding_between_lines = 10;
+
+	size_t title_size = 38;
+	size_t taskbar_size = 50;
 
 	const size_t desktop_width = sf::VideoMode::getDesktopMode().width;
 	const size_t desktop_height = sf::VideoMode::getDesktopMode().height;
@@ -70,9 +72,9 @@ namespace smolSf {
 		sf::Texture screen;
 		sf::Font font;
 	public:
-		smol_window(size_t size_x, size_t size_y, std::string name);
+		smol_window(size_t size_x, size_t size_y, std::string name = smolSf::default_window_title);
 		template<typename T>
-		smol_window(T sub_x, T sub_y, std::initializer_list<T> x_pos, std::initializer_list<T> y_pos);
+		smol_window(T sub_x, T sub_y, std::initializer_list<T> x_pos, std::initializer_list<T> y_pos, std::string name = smolSf::default_window_title);
 		template<typename T>
 		smol_window(T sub_x, T sub_y, T x_pos, T y_pos);
 
@@ -143,7 +145,7 @@ template<typename T>
 }
 
 template<typename T>
-smolSf::smol_window::smol_window(T sub_x, T sub_y, std::initializer_list<T> x_pos, std::initializer_list<T> y_pos) {
+smolSf::smol_window::smol_window(T sub_x, T sub_y, std::initializer_list<T> x_pos, std::initializer_list<T> y_pos, std::string name) {
 	auto square_size = { desktop_width / sub_x,(desktop_height - taskbar_size) / sub_y };
 	sf::Vector2u window_size;
 	if (x_pos.size() == 2)
@@ -154,7 +156,7 @@ smolSf::smol_window::smol_window(T sub_x, T sub_y, std::initializer_list<T> x_po
 		window_size.y = (get(y_pos, 1) - get(y_pos, 0) + 1)*get(square_size, 1);
 	if (y_pos.size() == 1)
 		window_size.y = get(square_size, 1);
-	window.create(sf::VideoMode(window_size.x, window_size.y - title_size), "ok");
+	window.create(sf::VideoMode(window_size.x, window_size.y - title_size), name );
 	all_windows.push_back(this);
 	count++;
 	screen.create(window_size.x, window_size.y - title_size);

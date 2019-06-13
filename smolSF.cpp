@@ -9,27 +9,19 @@
 int main()
 {
 	smolSf::smol_window w(2, 2, 0, 0);
-	smolSf::smol_window w2(2, 2, 0, 1);
+	smolSf::smol_window w2(2, 2, { 0,1 }, { 1 });
 	smolSf::smol_window w3(2, 2, 1, 0);
 
 
-	smolSf::character_size = 30;
+	smolSf::character_size = 16;
 	w2.font.loadFromFile("default.ttf");
 
 	int frames = 60;
 	
-	smolSf::add_on_key_down(sf::Keyboard::W, [&]() { frames += 2 * (rand() % 2) - 1; });
-	smolSf::add_on_key_up(sf::Keyboard::W, [&]() { frames += 2 * (rand() % 2) - 1; });
+	smolSf::add_on_key_up(sf::Keyboard::Escape, [&]() { smolSf::all_close(); });
 
 	while (smolSf::all_isOpen()) {
 		smolSf::smol_helper help;
-
-		sf::Event event;
-		while (smolSf::all_pollEvent(event)) {
-			if (event.type == sf::Event::Closed)
-				smolSf::all_close();
-		}
-		
 
 		w2 << "Framerate: " << frames << smolSf::endl;
 		w2 << "Rays: " << frames * 156 << smolSf::endl;
