@@ -80,12 +80,16 @@ namespace smolSf {
 
 		~smol_window();
 
-		template<class T>
-		void draw(T* pixel_data);
-		template<class T>
-		void draw(T* pixel_data, size_t x, size_t y, size_t x_pos, size_t y_pos);
+		void draw(sf::Uint8* pixel_data);
+	
+		void draw(sf::Uint8* pixel_data, size_t x, size_t y, size_t x_pos, size_t y_pos);
+
 		template<class T>
 		void draw(std::shared_ptr<T> pixel_data);
+		
+		template<class T>
+		void draw(std::unique_ptr<T> pixel_data);
+		
 		void show(sf::Uint8* pixel_data);
 		void show(sf::Uint8* pixel_data, size_t x, size_t y, size_t x_pos, size_t y_pos);
 
@@ -176,6 +180,10 @@ smolSf::smol_window::smol_window(size_t size_x, size_t size_y, std::string name)
 
 template<class T>
 void smolSf::smol_window::draw(std::shared_ptr<T> pixel_data) {
+	draw(pixel_data.get());
+}
+template<class T>
+void smolSf::smol_window::draw(std::unique_ptr<T> pixel_data) {
 	draw(pixel_data.get());
 }
 
