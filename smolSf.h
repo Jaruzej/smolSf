@@ -22,6 +22,7 @@ So that only calling draw function is necessary.
 
 More information and examples at https://github.com/Jaruzej/smolSf
 
+These .libs are necessary for smolSf: sfml-graphics.lib,sfml-window.lib,sfml-system-d.lib.
 */
 
 
@@ -166,19 +167,24 @@ namespace smolSf {
 		[[nodiscard]] sf::Vector2u getSize();
 	};
 
-
+	
 	class smol_helper{
 	public:
 		smol_helper();
 		~smol_helper();
 	};
 
-
+	//Helper function needed for the operator <<.
 	template<typename T>
 	[[nodiscard]] std::string convert_T_to_str(const T& s);
 	[[nodiscard]] size_t count_newlines(std::string s);
 
 }
+
+///////////////////////////////////////////////////////////////////
+//DRAW
+//////////////////////////////////////////////////////////////////
+
 
 template<class T>
 void smolSf::smol_window::draw(T* pixel_data) {
@@ -282,7 +288,7 @@ smolSf::smol_window::~smol_window() {
 
 
 ///////////////////////////////////////////////////////////////////
-//ALL FUNCTIONS
+//ALL_ FUNCTIONS
 //////////////////////////////////////////////////////////////////
 
 void smolSf::all_display() {
@@ -329,7 +335,9 @@ void smolSf::all_clear(sf::Color col) {
 	}
 }
 
-////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+//SMOL_HELPER
+//////////////////////////////////////////////////////////////////
 smolSf::smol_helper::smol_helper() {
 	smolSf::all_clear();
 	smolSf::poll_keyboard();
@@ -338,6 +346,10 @@ smolSf::smol_helper::smol_helper() {
 smolSf::smol_helper::~smol_helper() {
 	smolSf::all_display();
 }
+
+///////////////////////////////////////////////////////////////////
+//INPUT
+//////////////////////////////////////////////////////////////////
 
 void smolSf::poll_keyboard() {
 	for (size_t key = sf::Keyboard::A; key < sf::Keyboard::KeyCount; ++key) {
@@ -405,50 +417,6 @@ bool smolSf::any_key_up() {
 	}
 	return false;
 }
-template<typename T>
-std::string smolSf::convert_T_to_str(const T& s) {
-	std::stringstream ss;
-	ss << s;
-	return ss.str();
-}
-
-size_t smolSf::count_newlines(std::string s) {
-	size_t newline_count = 0;
-
-	for (auto c : s)
-		if (c == '\n')
-			newline_count++;
-
-	return newline_count;
-}
-
-template<typename T>
-smolSf::smol_window& smolSf::operator<<(smolSf::smol_window& win,  const T& s) {
-
-	std::string converted = convert_T_to_str(s);
-	
-	if (*converted.begin() == '\n')
-		win.current_text_pos.x = 0;
-	
-	size_t newline_count = count_newlines(converted);
-
-	
-	sf::Text t(converted,win.font, character_size);
-	t.setPosition(win.current_text_pos);
-	
-	win.window.draw(t);
-
-	sf::Text t2(smolSf::string_for_one_line_size, win.font, character_size);
-	
-	win.current_text_pos += sf::Vector2f(t.getGlobalBounds().width, (t2.getGlobalBounds().height+smolSf::padding_between_lines)*newline_count);
-
-
-	if (*(--converted.end()) == '\n')
-		win.current_text_pos.x = 0;
-
-	return win;
-}
-
 
 void smolSf::add_on_key_pressed(sf::Keyboard::Key key, std::function<void()> f) {
 	smolSf::impl::on_key_pressed_functions.push_back({ key,f });
@@ -473,3 +441,58 @@ void smolSf::add_on_key_up(sf::Keyboard::Key key, std::function<void() > f) {
 void smolSf::add_on_button_up(sf::Mouse::Button button, std::function<void() > f) {
 	smolSf::impl::on_button_up_functions.push_back({ button,f });
 }
+
+///////////////////////////////////////////////////////////////////
+//CONSOLE SIMULATION
+//////////////////////////////////////////////////////////////////
+
+
+template<typename T>
+std::string smolSf::convert_T_to_str(const T& s) {
+	std::stringstream ss;
+	ss << s;
+	return ss.str();
+}
+
+size_t smolSf::count_newlines(std::string s) {
+	size_t newline_count = 0;
+
+	for (auto c : s)
+		if (c == '\n')
+			newline_count++;
+
+	return newline_count;
+}
+
+
+
+template<typename T>
+smolSf::smol_window& smolSf::operator<<(smolSf::smol_window& win, const T& s) {
+
+	std::string converted = convert_T_to_str(s);
+	
+	if (converted.size() == 0)
+		return win;
+
+	if (*converted.begin() == '\n')
+		win.current_text_pos.x = 0;
+
+	size_t newline_count = count_newlines(converted);
+
+
+	sf::Text t(converted, win.font, character_size);
+	t.setPosition(win.current_text_pos);
+
+	win.window.draw(t);
+
+	sf::Text t2(smolSf::string_for_one_line_size, win.font, character_size);
+
+	win.current_text_pos += sf::Vector2f(t.getGlobalBounds().width, (t2.getGlobalBounds().height + smolSf::padding_between_lines)*newline_count);
+
+
+	if (*(--converted.end()) == '\n')
+		win.current_text_pos.x = 0;
+
+	return win;
+}
+
