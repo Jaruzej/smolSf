@@ -47,7 +47,7 @@ There is no default font is SFML so one has to be loaded before stream operator 
 
 ### Revised input
 
-There are three arrays of bools for keyboard as well as mouse. They are updated when respectively '''poll_keyboard()''' and '''poll_mouse()''' are called.
+There are three arrays of bools for keyboard as well as mouse. They are updated when respectively ```poll_keyboard()``` and ```poll_mouse()``` are called.
 ```isKeyPressed``` checks if key is pressed at the moment of polling inputs.
 ```isKeyDown``` is true if key was not pressed at last poll and is pressed at this poll.
 ```isKeyUp``` is true if key was pressed at last poll and is not pressed at this poll.
