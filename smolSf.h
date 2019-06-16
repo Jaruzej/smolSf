@@ -44,7 +44,12 @@ namespace smolSf {
 
 	namespace {
 		bool isKeyPressedLast[sf::Keyboard::KeyCount] = { false };
+		std::array<bool, sf::Mouse::ButtonCount> isMouseButtonPressedLast = { false };
 		sf::Vector2i last_mouse_position;
+
+		std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> on_key_pressed_functions;
+		std::vector<std::pair<sf::Mouse::Button, std::function<void()>>> on_button_pressed_functions;
+
 		std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> on_key_down_functions;
 		std::vector<std::pair<sf::Mouse::Button, std::function<void()>>> on_button_down_functions;
 
@@ -55,6 +60,8 @@ namespace smolSf {
 	void poll_keyboard();
 	void poll_mouse();	
 
+	void add_on_key_pressed(sf::Keyboard::Key, std::function<void() >);
+	void add_on_button_pressed(sf::Mouse::Button, std::function<void() >);
 
 	void add_on_key_down(sf::Keyboard::Key, std::function<void() > );
 	void add_on_button_down(sf::Mouse::Button, std::function<void() >);
@@ -80,16 +87,11 @@ namespace smolSf {
 
 		~smol_window();
 
-		void draw(sf::Uint8* pixel_data);
-	
-		void draw(sf::Uint8* pixel_data, size_t x, size_t y, size_t x_pos, size_t y_pos);
+		template<class T>
+		void draw(T* pixel_data);
+		template<class T>
+		void draw(T* pixel_data, size_t x, size_t y, size_t x_pos, size_t y_pos);
 
-		template<class T>
-		void draw(std::shared_ptr<T> pixel_data);
-		
-		template<class T>
-		void draw(std::unique_ptr<T> pixel_data);
-		
 		void show(sf::Uint8* pixel_data);
 		void show(sf::Uint8* pixel_data, size_t x, size_t y, size_t x_pos, size_t y_pos);
 
@@ -126,7 +128,6 @@ namespace smolSf {
 	[[nodiscard]] size_t count_newlines(std::string s);
 
 }
-
 
 template<class T>
 void smolSf::smol_window::draw(T* pixel_data) {
@@ -178,14 +179,6 @@ smolSf::smol_window::smol_window(size_t size_x, size_t size_y, std::string name)
 };
 
 
-template<class T>
-void smolSf::smol_window::draw(std::shared_ptr<T> pixel_data) {
-	draw(pixel_data.get());
-}
-template<class T>
-void smolSf::smol_window::draw(std::unique_ptr<T> pixel_data) {
-	draw(pixel_data.get());
-}
 
 void smolSf::smol_window::show(sf::Uint8* pixel_data) {
 	window.clear();
@@ -286,14 +279,15 @@ void smolSf::poll_keyboard() {
 		smolSf::isKeyUp		[key] = !smolSf::isKeyPressed[key] &&  smolSf::isKeyPressedLast[key];
 		smolSf::isKeyPressedLast[key] = smolSf::isKeyPressed[key];
 	}
-	for (auto [key, f] : smolSf::on_key_down_functions) {
+	for (auto [key, f] : smolSf::on_key_down_functions) 
 		if (smolSf::isKeyDown[key])
 			f();
-	}
-	for (auto [key, f] : smolSf::on_key_up_functions) {
+	for (auto [key, f] : smolSf::on_key_up_functions) 
 		if (smolSf::isKeyUp[key])
 			f();
-	}
+	for (auto[key, f] : smolSf::on_key_pressed_functions)
+		if (smolSf::isKeyPressed[key])
+			f();
 }
 
 void smolSf::poll_mouse() {
@@ -303,19 +297,20 @@ void smolSf::poll_mouse() {
 		smolSf::mouse_delta = smolSf::mouse_position - smolSf::last_mouse_position;
 		smolSf::last_mouse_position = smolSf::mouse_position;
 
-		smolSf::isKeyPressed[button] =  sf::Mouse::isButtonPressed((sf::Mouse::Button) button);
-		smolSf::isKeyDown	[button] =  smolSf::isKeyPressed[button] && !smolSf::isKeyPressedLast[button];
-		smolSf::isKeyUp		[button] = !smolSf::isKeyPressed[button] &&  smolSf::isKeyPressedLast[button];
-		smolSf::isKeyPressedLast[button] = smolSf::isKeyPressed[button];
+		smolSf::isMouseButtonPressed[button] =  sf::Mouse::isButtonPressed((sf::Mouse::Button) button);
+		smolSf::isMouseButtonDown	[button] =  smolSf::isMouseButtonPressed[button] && !smolSf::isMouseButtonPressedLast[button];
+		smolSf::isMouseButtonUp		[button] = !smolSf::isMouseButtonPressed[button] &&  smolSf::isMouseButtonPressedLast[button];
+		smolSf::isMouseButtonPressedLast[button] = smolSf::isMouseButtonPressed[button];
 	}
-	for (auto [button, f] : smolSf::on_button_down_functions) {
+	for (auto [button, f] : smolSf::on_button_down_functions) 
 		if (smolSf::isMouseButtonDown[button])
 			f();
-	}
-	for (auto [button, f] : smolSf::on_button_down_functions) {
+	for (auto [button, f] : smolSf::on_button_up_functions)
 		if (smolSf::isMouseButtonUp[button])
 			f();
-	}
+	for (auto[button, f] : smolSf::on_button_pressed_functions)
+		if (smolSf::isMouseButtonPressed[button])
+			f();
 }
 
 void smolSf::set_mouse_position(sf::Vector2i& v) {
@@ -376,6 +371,14 @@ smolSf::smol_window& smolSf::operator<<(smolSf::smol_window& win,  const T& s) {
 	return win;
 }
 
+
+void smolSf::add_on_key_pressed(sf::Keyboard::Key key, std::function<void()> f) {
+	smolSf::on_key_pressed_functions.push_back({ key,f });
+}
+
+void smolSf::add_on_button_pressed(sf::Mouse::Button button, std::function<void()> f) {
+	smolSf::on_button_pressed_functions.push_back({ button,f });
+}
 
 void smolSf::add_on_key_down(sf::Keyboard::Key key, std::function<void()> f ) {
 	smolSf::on_key_down_functions.push_back({ key,f });
