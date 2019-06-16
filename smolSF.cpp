@@ -25,8 +25,7 @@ int main()
 
 		w2 << "Framerate: " << frames << smolSf::endl;
 		w2 << "Rays: " << frames * 156 << smolSf::endl;
-		
+		w2.clear();
 	}
 	std::cout << "Hello World!\n";
-	std::cout << smolSf::smol_window::count;
 }
