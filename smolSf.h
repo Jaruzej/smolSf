@@ -112,8 +112,9 @@ namespace smolSf {
 		sf::Font font;
 
 		smol_window(size_t size_x, size_t size_y, std::string name = smolSf::default_window_title);
+		smol_window(size_t size_x, size_t size_y,size_t pos_x,size_t pos_y, std::string name = smolSf::default_window_title);
 		
-		/*This constructors use convention that is inspired by matlab subplot.
+		/*These constructors use convention that is inspired by matlab subplot.
 		  sub_x,sub_y determine in how many cells screen will be split, while x_pos,y_pos determine which of these cells will be taken.
 		  Cells should be in range [0,sub_x) and [0,sub_y).
 		  Using x_pos >= sub_x and y_pos >= sub_y might lead to errors. 
@@ -137,6 +138,7 @@ namespace smolSf {
 		void show(sf::Uint8* pixel_data, size_t x, size_t y, size_t x_pos, size_t y_pos);
 
 		//These functions are the same as their SFML counterparts.
+		void setFramerateRate(size_t);
 		[[nodiscard]] bool isOpen();
 		void clear(sf::Color = sf::Color::Black);
 		void close();
@@ -243,7 +245,9 @@ smolSf::smol_window::smol_window(size_t size_x, size_t size_y, std::string name)
 //UTILITIES
 //////////////////////////////////////////////////////////////////
 
-
+void smolSf::smol_window::setFramerateRate(size_t limit) {
+	window.setFramerateLimit(limit);
+}
 void smolSf::smol_window::show(sf::Uint8* pixel_data) {
 	window.clear();
 	draw(pixel_data);
