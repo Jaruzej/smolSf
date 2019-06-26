@@ -114,8 +114,8 @@ namespace smolSf {
 	public:
 		sf::Font font;
 
+		//Creates window of size {size_x,size_y}.
 		smol_window(size_t size_x, size_t size_y, std::string name = smolSf::default_window_title);
-		smol_window(size_t size_x, size_t size_y,size_t pos_x,size_t pos_y, std::string name = smolSf::default_window_title);
 		
 		/*These constructors use convention that is inspired by matlab subplot.
 		  sub_x,sub_y determine in how many cells screen will be split, while x_pos,y_pos determine which of these cells will be taken.
@@ -141,6 +141,8 @@ namespace smolSf {
 		void show(sf::Uint8* pixel_data, size_t x, size_t y, size_t x_pos, size_t y_pos);
 
 		//These functions are the same as their SFML counterparts.
+		void setSize(sf::Vector2u);
+		void setPosition(sf::Vector2u);
 		void setFramerateRate(size_t);
 		[[nodiscard]] bool isOpen();
 		void clear(sf::Color = sf::Color::Black);
@@ -254,6 +256,13 @@ smolSf::smol_window::smol_window(size_t size_x, size_t size_y, std::string name)
 ///////////////////////////////////////////////////////////////////
 //UTILITIES
 //////////////////////////////////////////////////////////////////
+
+void smolSf::smol_window::setSize(sf::Vector2u size) {
+	window.setSize(std::move(size));
+}
+void smolSf::smol_window::setPosition(sf::Vector2u pos) {
+	window.setPosition(std::move(pos));
+}
 
 void smolSf::smol_window::setFramerateRate(size_t limit) {
 	window.setFramerateLimit(limit);
@@ -517,12 +526,12 @@ void smolSf::tic() {
 	smolSf::impl::tik_points.push(std::chrono::steady_clock::now());
 }
 
-std::chrono::seconds smolSf::toc() {
+std::chrono::nanoseconds smolSf::toc() {
 	if (smolSf::impl::tik_points.empty()) {
 		std::cout << "There is no tic associated with this toc.\n";
 		return {};
 	}
-	std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>( std::chrono::steady_clock::now()-smolSf::impl::tik_points.front());
+	std::chrono::nanoseconds duration = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::steady_clock::now()-smolSf::impl::tik_points.front());
 	smolSf::impl::tik_points.pop();
 	return duration;
 }
