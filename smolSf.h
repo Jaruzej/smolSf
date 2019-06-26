@@ -7,7 +7,8 @@
 #include<array>
 #include<sstream>
 #include<functional>
-
+#include<chrono>
+#include<queue>
 /*
 smolSf provides a small wrapper around SFML 2.5.1 mainly aimed at personal raymarching/spherer tracing project.
 
@@ -83,6 +84,8 @@ namespace smolSf {
 
 		std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> on_key_up_functions;
 		std::vector<std::pair<sf::Mouse::Button, std::function<void()>>> on_button_up_functions;
+		
+		std::queue<std::chrono::steady_clock::time_point> tik_points;
 	}
 
 	void poll_keyboard();
@@ -180,6 +183,13 @@ namespace smolSf {
 	template<typename T>
 	[[nodiscard]] std::string convert_T_to_str(const T& s);
 	[[nodiscard]] size_t count_newlines(std::string s);
+
+
+	//tic, toc works like their matlab counterparts, whenever tic is called current time is pushed into queue.
+	//toc return duration between last tic and current time.
+	//So tic() tic() toc() toc() would return duration between inner tic-toc and then return outer tic-tok.
+	void tic();
+	std::chrono::nanoseconds toc();
 
 }
 
@@ -500,3 +510,19 @@ smolSf::smol_window& smolSf::operator<<(smolSf::smol_window& win, const T& s) {
 	return win;
 }
 
+//Timing
+
+
+void smolSf::tic() {
+	smolSf::impl::tik_points.push(std::chrono::steady_clock::now());
+}
+
+std::chrono::seconds smolSf::toc() {
+	if (smolSf::impl::tik_points.empty()) {
+		std::cout << "There is no tic associated with this toc.\n";
+		return {};
+	}
+	std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>( std::chrono::steady_clock::now()-smolSf::impl::tik_points.front());
+	smolSf::impl::tik_points.pop();
+	return duration;
+}
