@@ -142,7 +142,7 @@ namespace smolSf {
 
 		//These functions are the same as their SFML counterparts.
 		void setSize(sf::Vector2u);
-		void setPosition(sf::Vector2u);
+		void setPosition(sf::Vector2i);
 		void setFramerateRate(size_t);
 		[[nodiscard]] bool isOpen();
 		void clear(sf::Color = sf::Color::Black);
@@ -192,7 +192,8 @@ namespace smolSf {
 	//So tic() tic() toc() toc() would return duration between inner tic-toc and then return outer tic-tok.
 	void tic();
 	std::chrono::nanoseconds toc();
-
+	//If you don't want to deal with std::chrono library this toc will return duration as plain number of seconds.
+	float toc_as_fseconds();
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -260,7 +261,7 @@ smolSf::smol_window::smol_window(size_t size_x, size_t size_y, std::string name)
 void smolSf::smol_window::setSize(sf::Vector2u size) {
 	window.setSize(std::move(size));
 }
-void smolSf::smol_window::setPosition(sf::Vector2u pos) {
+void smolSf::smol_window::setPosition(sf::Vector2i pos) {
 	window.setPosition(std::move(pos));
 }
 
@@ -534,4 +535,8 @@ std::chrono::nanoseconds smolSf::toc() {
 	std::chrono::nanoseconds duration = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::steady_clock::now()-smolSf::impl::tik_points.front());
 	smolSf::impl::tik_points.pop();
 	return duration;
+}
+
+float smolSf::toc_as_fseconds() {
+	return std::chrono::duration_cast<std::chrono::duration<float>>(smolSf::toc()).count();
 }
