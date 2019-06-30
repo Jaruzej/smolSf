@@ -66,8 +66,10 @@ smol_helper will poll input and clear all windows when its constructed and displ
 chrono class contains static functions tic, toc and toc_as_fseconds, which are used used to measure time. Whenever
 tic is called a current time is pushed into a queue. When toc is called current time is compared with first time in the queue
 which is then removed from the queue.
+
 Difference is returned as std::chrono::nanoseconds.
-If you don't want to deal with std::chrono, toc_as_fseconds returns a float which is a output of toc converted to number of seconds.
+
+If you don't want to deal with std::chrono, toc_as_fseconds returns a float which is an output of toc converted to number of seconds.
 
 ## Example
 
