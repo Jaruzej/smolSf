@@ -1,6 +1,8 @@
-#pragma once
+#ifndef SMOLSF_H
+#define SMOLSF_H
 
-#include"pch.h"
+
+
 #include<SFML/Graphics.hpp>
 #include<iostream>
 #include<algorithm>
@@ -547,3 +549,6 @@ std::chrono::nanoseconds smolSf::chrono::toc() {
 float smolSf::chrono::toc_as_fseconds() {
 	return std::chrono::duration_cast<std::chrono::duration<float>>(toc()).count();
 }
+
+
+#endif
