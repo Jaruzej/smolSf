@@ -335,3 +335,9 @@ ASALocalRun/
 
 #Fonts
 *.ttf
+
+#Project files
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
