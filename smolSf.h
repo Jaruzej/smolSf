@@ -1,8 +1,6 @@
 #ifndef SMOLSF_H
 #define SMOLSF_H
 
-
-
 #include<SFML/Graphics.hpp>
 #include<iostream>
 #include<algorithm>
