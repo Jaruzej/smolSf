@@ -47,63 +47,65 @@ namespace smolSf {
 	const size_t desktop_height = sf::VideoMode::getDesktopMode().height;
 
 	//Keyboard states that are updated when pollKeyboard is called.
-	std::array<bool, sf::Keyboard::KeyCount> isKeyPressed	= { false };
-	std::array<bool, sf::Keyboard::KeyCount> isKeyDown		= { false };
-	std::array<bool, sf::Keyboard::KeyCount> isKeyUp		= { false };
-	
-	[[nodiscard]] bool any_key_pressed();
-	[[nodiscard]] bool any_key_down();
-	[[nodiscard]] bool any_key_up();
+
+	class input {
+	private:
+		static inline bool isKeyPressedLast[sf::Keyboard::KeyCount] = { false };
+		static inline std::array<bool, sf::Mouse::ButtonCount> isMouseButtonPressedLast = { false };
+		static inline sf::Vector2i last_mouse_position;
+
+		static inline std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> on_key_pressed_functions;
+		static inline std::vector<std::pair<sf::Mouse::Button, std::function<void()>>> on_button_pressed_functions;
+
+		static inline std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> on_key_down_functions;
+		static inline std::vector<std::pair<sf::Mouse::Button, std::function<void()>>> on_button_down_functions;
+
+		static inline std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> on_key_up_functions;
+		static inline std::vector<std::pair<sf::Mouse::Button, std::function<void()>>> on_button_up_functions;
+	public:
+
+		static inline std::array<bool, sf::Keyboard::KeyCount> isKeyPressed = { false };
+		static inline std::array<bool, sf::Keyboard::KeyCount> isKeyDown = { false };
+		static inline std::array<bool, sf::Keyboard::KeyCount> isKeyUp = { false };
+
+		static void poll_keyboard();
+		static void poll_mouse();
 
 
-	//Mouse states that are updated when pollMouse is called.
-	std::array<bool, sf::Mouse::ButtonCount> isMouseButtonPressed	= { false };
-	std::array<bool, sf::Mouse::ButtonCount> isMouseButtonDown		= { false };
-	std::array<bool, sf::Mouse::ButtonCount> isMouseButtonUp		= { false };
-	
-	sf::Vector2i mouse_position;
-	//mouse_delta is a diffrence between position at current pollMouse and last pollMouse.
-	sf::Vector2i mouse_delta;
-	
-	void set_mouse_position(sf::Vector2i&);
+		[[nodiscard]] static bool any_key_pressed();
+		[[nodiscard]] static bool any_key_down();
+		[[nodiscard]] static bool any_key_up();
 
+
+		//Mouse states that are updated when pollMouse is called.
+		static inline std::array<bool, sf::Mouse::ButtonCount> isMouseButtonPressed = { false };
+		static inline std::array<bool, sf::Mouse::ButtonCount> isMouseButtonDown = { false };
+		static inline std::array<bool, sf::Mouse::ButtonCount> isMouseButtonUp = { false };
+
+		static inline sf::Vector2i mouse_position;
+		//mouse_delta is a diffrence between position at current pollMouse and last pollMouse.
+		static inline sf::Vector2i mouse_delta;
+
+		static void set_mouse_position(sf::Vector2i&);
+
+		//All on_key functions take in a key and a lambda that will be called during the next pollKeyboard or pollMouse call.
+		//Functions will be called in order 'down','up','pressed'.
+		static void add_on_key_pressed(sf::Keyboard::Key, std::function<void() >);
+		static void add_on_button_pressed(sf::Mouse::Button, std::function<void() >);
+
+		static void add_on_key_down(sf::Keyboard::Key, std::function<void() >);
+		static void add_on_button_down(sf::Mouse::Button, std::function<void() >);
+
+		static void add_on_key_up(sf::Keyboard::Key, std::function<void() >);
+		static void add_on_button_up(sf::Mouse::Button, std::function<void() >);
+
+
+
+	};
 	//Alternative to writing '\n' when using streaming to window.
 	constexpr auto endl = '\n';
 
-	//All members of impl namespace shouldn't be touched, they are supposed to be only used by other public functions.
-	namespace impl {
-		bool isKeyPressedLast[sf::Keyboard::KeyCount] = { false };
-		std::array<bool, sf::Mouse::ButtonCount> isMouseButtonPressedLast = { false };
-		sf::Vector2i last_mouse_position;
-
-		std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> on_key_pressed_functions;
-		std::vector<std::pair<sf::Mouse::Button, std::function<void()>>> on_button_pressed_functions;
-
-		std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> on_key_down_functions;
-		std::vector<std::pair<sf::Mouse::Button, std::function<void()>>> on_button_down_functions;
-
-		std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> on_key_up_functions;
-		std::vector<std::pair<sf::Mouse::Button, std::function<void()>>> on_button_up_functions;
-		
-		std::queue<std::chrono::steady_clock::time_point> tik_points;
-	}
-
-	void poll_keyboard();
-	void poll_mouse();	
-
-
-	//All on_key functions take in a key and a lambda that will be called during the next pollKeyboard or pollMouse call.
-	//Functions will be called in order 'down','up','pressed'.
-	void add_on_key_pressed(sf::Keyboard::Key, std::function<void() >);
-	void add_on_button_pressed(sf::Mouse::Button, std::function<void() >);
-
-	void add_on_key_down(sf::Keyboard::Key, std::function<void() > );
-	void add_on_button_down(sf::Mouse::Button, std::function<void() >);
-
-	void add_on_key_up(sf::Keyboard::Key, std::function<void() >);
-	void add_on_button_up(sf::Mouse::Button, std::function<void() >);
-
-
+	
 	class smol_window {
 	private:
 		static inline std::vector<smol_window*> all_windows;
@@ -174,6 +176,18 @@ namespace smolSf {
 		[[nodiscard]] sf::Vector2u getSize();
 	};
 
+	class chrono {
+	private:
+		static inline std::queue<std::chrono::steady_clock::time_point> tik_points;
+	public:
+		//tic, toc works like their matlab counterparts, whenever tic is called current time is pushed into queue.
+		//toc return duration between last tic and current time.
+		//So tic() tic() toc() toc() would return duration between inner tic-toc and then return outer tic-tok.
+		static void tic();
+		[[nodiscard]] static std::chrono::nanoseconds toc();
+		//If you don't want to deal with std::chrono library this toc will return duration as plain number of seconds.
+		[[nodiscard]] static float toc_as_fseconds();
+	};
 	
 	class smol_helper{
 	public:
@@ -186,14 +200,6 @@ namespace smolSf {
 	[[nodiscard]] std::string convert_T_to_str(const T& s);
 	[[nodiscard]] size_t count_newlines(std::string s);
 
-
-	//tic, toc works like their matlab counterparts, whenever tic is called current time is pushed into queue.
-	//toc return duration between last tic and current time.
-	//So tic() tic() toc() toc() would return duration between inner tic-toc and then return outer tic-tok.
-	void tic();
-	std::chrono::nanoseconds toc();
-	//If you don't want to deal with std::chrono library this toc will return duration as plain number of seconds.
-	float toc_as_fseconds();
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -364,8 +370,8 @@ void smolSf::all_clear(sf::Color col) {
 //////////////////////////////////////////////////////////////////
 smolSf::smol_helper::smol_helper() {
 	smolSf::all_clear();
-	smolSf::poll_keyboard();
-	smolSf::poll_mouse();
+	smolSf::input::poll_keyboard();
+	smolSf::input::poll_mouse();
 }
 smolSf::smol_helper::~smol_helper() {
 	smolSf::all_display();
@@ -375,95 +381,96 @@ smolSf::smol_helper::~smol_helper() {
 //INPUT
 //////////////////////////////////////////////////////////////////
 
-void smolSf::poll_keyboard() {
+void smolSf::input::poll_keyboard() {
+	using namespace smolSf;
 	for (size_t key = sf::Keyboard::A; key < sf::Keyboard::KeyCount; ++key) {
-		smolSf::isKeyPressed[key] =  sf::Keyboard::isKeyPressed((sf::Keyboard::Key) key);
-		smolSf::isKeyDown	[key] =  smolSf::isKeyPressed[key] && !smolSf::impl::isKeyPressedLast[key];
-		smolSf::isKeyUp		[key] = !smolSf::isKeyPressed[key] &&  smolSf::impl::isKeyPressedLast[key];
-		smolSf::impl::isKeyPressedLast[key] = smolSf::isKeyPressed[key];
+		input::isKeyPressed [key] = sf::Keyboard::isKeyPressed((sf::Keyboard::Key) key);
+		input::isKeyDown	[key] =  input::isKeyPressed[key] && !input::isKeyPressedLast[key];
+		input::isKeyUp			[key] = !input::isKeyPressed[key] &&  input::isKeyPressedLast[key];
+		input::isKeyPressedLast	[key] = input::isKeyPressed[key];
 	}
-	for (auto [key, f] : smolSf::impl::on_key_down_functions) 
-		if (smolSf::isKeyDown[key])
+	for (auto [key, f] : input::on_key_down_functions) 
+		if (input::isKeyDown[key])
 			f();
-	for (auto [key, f] : smolSf::impl::on_key_up_functions) 
-		if (smolSf::isKeyUp[key])
+	for (auto [key, f] : input::on_key_up_functions) 
+		if (input::isKeyUp[key])
 			f();
-	for (auto[key, f] : smolSf::impl::on_key_pressed_functions)
-		if (smolSf::isKeyPressed[key])
+	for (auto[key, f] : input::on_key_pressed_functions)
+		if (input::isKeyPressed[key])
 			f();
 }
 
-void smolSf::poll_mouse() {
+void smolSf::input::poll_mouse() {
 	for (size_t button = sf::Mouse::Left; button < sf::Mouse::ButtonCount; ++button) {
 		
-		smolSf::mouse_position = sf::Mouse::getPosition();
-		smolSf::mouse_delta = smolSf::mouse_position - smolSf::impl::last_mouse_position;
-		smolSf::impl::last_mouse_position = smolSf::mouse_position;
+		mouse_position = sf::Mouse::getPosition();
+		mouse_delta = mouse_position - last_mouse_position;
+		last_mouse_position = mouse_position;
 
-		smolSf::isMouseButtonPressed[button] =  sf::Mouse::isButtonPressed((sf::Mouse::Button) button);
-		smolSf::isMouseButtonDown	[button] =  smolSf::isMouseButtonPressed[button] && !smolSf::impl::isMouseButtonPressedLast[button];
-		smolSf::isMouseButtonUp		[button] = !smolSf::isMouseButtonPressed[button] &&  smolSf::impl::isMouseButtonPressedLast[button];
-		smolSf::impl::isMouseButtonPressedLast[button] = smolSf::isMouseButtonPressed[button];
+		isMouseButtonPressed[button] =  sf::Mouse::isButtonPressed((sf::Mouse::Button) button);
+		isMouseButtonDown	[button] =  isMouseButtonPressed[button] && !isMouseButtonPressedLast[button];
+		isMouseButtonUp		[button] = !isMouseButtonPressed[button] &&  isMouseButtonPressedLast[button];
+		isMouseButtonPressedLast[button] = isMouseButtonPressed[button];
 	}
-	for (auto [button, f] : smolSf::impl::on_button_down_functions) 
-		if (smolSf::isMouseButtonDown[button])
+	for (auto [button, f] : on_button_down_functions) 
+		if (isMouseButtonDown[button])
 			f();
-	for (auto [button, f] : smolSf::impl::on_button_up_functions)
-		if (smolSf::isMouseButtonUp[button])
+	for (auto [button, f] : on_button_up_functions)
+		if (isMouseButtonUp[button])
 			f();
-	for (auto[button, f] : smolSf::impl::on_button_pressed_functions)
-		if (smolSf::isMouseButtonPressed[button])
+	for (auto[button, f] : on_button_pressed_functions)
+		if (isMouseButtonPressed[button])
 			f();
 }
 
-void smolSf::set_mouse_position(sf::Vector2i& v) {
+void smolSf::input::set_mouse_position(sf::Vector2i& v) {
 	sf::Mouse::setPosition(v);
 }
 
-bool smolSf::any_key_pressed() {
-	for (const auto key : smolSf::isKeyPressed) {
+bool smolSf::input::any_key_pressed() {
+	for (const auto key : isKeyPressed) {
 		if (key)
 			return true;
 	}
 	return false;
 }
-bool smolSf::any_key_down() {
-	for (const auto key : smolSf::isKeyDown) {
+bool smolSf::input::any_key_down() {
+	for (const auto key : isKeyDown) {
 		if (key)
 			return true;
 	}
 	return false;
 }
-bool smolSf::any_key_up() {
-	for (const auto key : smolSf::isKeyUp) {
+bool smolSf::input::any_key_up() {
+	for (const auto key : isKeyUp) {
 		if (key)
 			return true;
 	}
 	return false;
 }
 
-void smolSf::add_on_key_pressed(sf::Keyboard::Key key, std::function<void()> f) {
-	smolSf::impl::on_key_pressed_functions.push_back({ key,f });
+void smolSf::input::add_on_key_pressed(sf::Keyboard::Key key, std::function<void()> f) {
+	on_key_pressed_functions.push_back({ key,f });
 }
 
-void smolSf::add_on_button_pressed(sf::Mouse::Button button, std::function<void()> f) {
-	smolSf::impl::on_button_pressed_functions.push_back({ button,f });
+void smolSf::input::add_on_button_pressed(sf::Mouse::Button button, std::function<void()> f) {
+	on_button_pressed_functions.push_back({ button,f });
 }
 
-void smolSf::add_on_key_down(sf::Keyboard::Key key, std::function<void()> f ) {
-	smolSf::impl::on_key_down_functions.push_back({ key,f });
+void smolSf::input::add_on_key_down(sf::Keyboard::Key key, std::function<void()> f ) {
+	on_key_down_functions.push_back({ key,f });
 }
 
 
-void smolSf::add_on_button_down(sf::Mouse::Button button, std::function<void()> f) {
-	smolSf::impl::on_button_down_functions.push_back({ button,f });
+void smolSf::input::add_on_button_down(sf::Mouse::Button button, std::function<void()> f) {
+	on_button_down_functions.push_back({ button,f });
 }
 
-void smolSf::add_on_key_up(sf::Keyboard::Key key, std::function<void() > f) {
-	smolSf::impl::on_key_up_functions.push_back({ key,f });
+void smolSf::input::add_on_key_up(sf::Keyboard::Key key, std::function<void() > f) {
+	on_key_up_functions.push_back({ key,f });
 }
-void smolSf::add_on_button_up(sf::Mouse::Button button, std::function<void() > f) {
-	smolSf::impl::on_button_up_functions.push_back({ button,f });
+void smolSf::input::add_on_button_up(sf::Mouse::Button button, std::function<void() > f) {
+	on_button_up_functions.push_back({ button,f });
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -523,20 +530,20 @@ smolSf::smol_window& smolSf::operator<<(smolSf::smol_window& win, const T& s) {
 //Timing
 
 
-void smolSf::tic() {
-	smolSf::impl::tik_points.push(std::chrono::steady_clock::now());
+void smolSf::chrono::tic() {
+	tik_points.push(std::chrono::steady_clock::now());
 }
 
-std::chrono::nanoseconds smolSf::toc() {
-	if (smolSf::impl::tik_points.empty()) {
+std::chrono::nanoseconds smolSf::chrono::toc() {
+	if (tik_points.empty()) {
 		std::cout << "There is no tic associated with this toc.\n";
 		return {};
 	}
-	std::chrono::nanoseconds duration = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::steady_clock::now()-smolSf::impl::tik_points.front());
-	smolSf::impl::tik_points.pop();
+	std::chrono::nanoseconds duration = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::steady_clock::now()-tik_points.front());
+	tik_points.pop();
 	return duration;
 }
 
-float smolSf::toc_as_fseconds() {
-	return std::chrono::duration_cast<std::chrono::duration<float>>(smolSf::toc()).count();
+float smolSf::chrono::toc_as_fseconds() {
+	return std::chrono::duration_cast<std::chrono::duration<float>>(toc()).count();
 }
